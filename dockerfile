@@ -41,11 +41,20 @@ WORKDIR /var/www
 # Copiar código del proyecto antes de instalar dependencias
 COPY . .
 
-# Asignar permisos correctos
-RUN chmod -R 775 storage bootstrap/cache
+# Asignar permisos correctos al usuario www-data
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 # Instalar dependencias de PHP y Node.js
 RUN composer install --no-dev --optimize-autoloader && npm install && npm run build
+
+# Generar clave de aplicación y limpiar caché
+RUN php artisan key:generate \
+    && php artisan config:clear \
+    && php artisan cache:clear
+
+# Crear enlace simbólico para almacenamiento (evitar error si ya existe)
+RUN rm -rf public/storage && php artisan storage:link
 
 # Copiar configuración de Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -53,5 +62,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Exponer puerto de Nginx
 EXPOSE 8080
 
-# Iniciar servicios (Nginx + PHP-FPM)
-CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
+# Iniciar servicios (PHP-FPM y Nginx)
+CMD ["sh", "-c", "php-fpm --nodaemonize & nginx -g 'daemon off;'"]
