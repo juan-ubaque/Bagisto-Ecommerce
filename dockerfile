@@ -48,11 +48,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # Instalar dependencias de PHP y Node.js
 RUN composer install --no-dev --optimize-autoloader && npm install && npm run build
 
-# Generar clave de aplicación y limpiar caché
-RUN php artisan key:generate \
-    && php artisan config:clear \
-    && php artisan cache:clear
-
 # Crear enlace simbólico para almacenamiento (evitar error si ya existe)
 RUN rm -rf public/storage && php artisan storage:link
 
@@ -62,5 +57,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Exponer puerto de Nginx
 EXPOSE 8080
 
-# Iniciar servicios (PHP-FPM y Nginx)
-CMD ["sh", "-c", "php-fpm --nodaemonize & nginx -g 'daemon off;'"]
+# Iniciar servicios y ejecutar comandos de Artisan
+CMD ["sh", "-c", "php artisan key:generate && php artisan migrate --force && php artisan config:clear && php artisan cache:clear && php-fpm --nodaemonize & nginx -g 'daemon off;'"]
