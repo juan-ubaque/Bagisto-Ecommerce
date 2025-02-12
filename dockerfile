@@ -59,17 +59,17 @@ RUN php artisan key:generate
 RUN echo "APP_INSTALLED=true" >> .env \
     && echo "APP_URL=https://bagisto-ecommerce.onrender.com" >> .env \
     && echo "DB_CONNECTION=mysql" >> .env \
-    && echo "DB_HOST=bagisto_mysql" >> .env \
+    && echo "DB_HOST=becm51vqfpialbthq6vw-mysql.services.clever-cloud.com" >> .env \
     && echo "DB_PORT=3306" >> .env \
-    && echo "DB_DATABASE=bagisto" >> .env \
-    && echo "DB_USERNAME=juan" >> .env \
+    && echo "DB_DATABASE=becm51vqfpialbthq6vw" >> .env \
+    && echo "DB_USERNAME=uawz1jgviwol8u3v" >> .env \
     && echo "APP_ADMIN_URL=admin" >> .env \
     && echo "APP_TIMEZONE=America/Bogota" >> .env \
     && echo "APP_LOCALE=es" >> .env \
     && echo "APP_CURRENCY=COP" >> .env \
     && echo "LOG_CHANNEL=stack" >> .env \
     && echo "RESPONSE_CACHE_ENABLED=true" >> .env \
-    && echo "DB_PASSWORD=12345" >> .env
+    && echo "DB_PASSWORD=a5qBrWELqVwko8CQezSp" >> .env
 
 # Limpiar caché y optimizar Laravel
 RUN php artisan cache:clear \
