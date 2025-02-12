@@ -76,6 +76,11 @@ RUN echo "APP_INSTALLED=true" >> .env \
 RUN rm -rf public/storage && ln -s /var/www/storage/app/public /var/www/public/storage
 RUN ls -la /var/www/public
 
+# Crear directorio de caché de imágenes y asignar permisos
+RUN mkdir -p public/cache && chown -R www-data:www-data public/cache && chmod -R 775 public/cache
+
+# Asignar permisos correctos a storage y bootstrap/cache (ya lo tienes, por ejemplo):
+RUN chown -R www-data:www-data storage bootstrap/cache && chmod -R 777 storage bootstrap/cache
 
 # Limpiar caché y optimizar Laravel
 RUN php artisan cache:clear \
