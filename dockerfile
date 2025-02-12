@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     zip \
     unzip \
     supervisor \
+    nginx \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
@@ -40,17 +41,17 @@ WORKDIR /var/www
 # Copiar código del proyecto antes de instalar dependencias
 COPY . .
 
-# Asignar permisos correctos al usuario www-data
-RUN chown -R www-data:www-data /var/www
-
-# Cambiar al usuario www-data
-USER www-data
+# Asignar permisos correctos
+RUN chmod -R 775 storage bootstrap/cache
 
 # Instalar dependencias de PHP y Node.js
 RUN composer install --no-dev --optimize-autoloader && npm install && npm run build
 
-# Exponer puerto para PHP-FPM
-EXPOSE 9000
+# Copiar configuración de Nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Comando por defecto para iniciar PHP-FPM
-CMD ["php-fpm"]
+# Exponer puerto de Nginx
+EXPOSE 8080
+
+# Iniciar servicios (Nginx + PHP-FPM)
+CMD ["sh", "-c", "php-fpm -D && nginx -g 'daemon off;'"]
