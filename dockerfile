@@ -41,15 +41,13 @@ WORKDIR /var/www
 # Copiar código del proyecto antes de instalar dependencias
 COPY . .
 
-# Asignar permisos correctos al usuario www-data
-RUN chown -R www-data:www-data storage bootstrap/cache public/storage \
+# Crear enlace simbólico para almacenamiento antes de asignar permisos
+RUN mkdir -p public/storage && ln -sfn /var/www/storage/app/public public/storage \
+    && chown -R www-data:www-data storage bootstrap/cache public/storage \
     && chmod -R 777 storage bootstrap/cache public/storage
 
 # Instalar dependencias de PHP y Node.js
 RUN composer install --no-dev --optimize-autoloader && npm install && npm run build
-
-# Crear enlace simbólico para almacenamiento (evitar error si ya existe)
-RUN rm -rf public/storage && php artisan storage:link
 
 # 🔹 Asegurar que la aplicación detecta que está instalada
 RUN echo "APP_INSTALLED=true" >> .env \
@@ -69,4 +67,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8080
 
 # Iniciar servicios y ejecutar comandos de Artisan
-CMD ["sh", "-c", "php artisan key:generate && php artisan migrate --force && php artisan cache:clear && php artisan config:clear && php-fpm -D && exec nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "php artisan key:generate && php artisan migrate --force && php artisan cache:clear && php artisan config:clear && php-fpm --nodaemonize & nginx -g 'daemon off;'"]
