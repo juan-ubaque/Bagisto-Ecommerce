@@ -23,7 +23,7 @@ RUN apk add --no-cache \
     make \
     autoconf \
     libzip-dev \
-    sqlite-dev # ✅ Soluciona el problema de SQLite3 en Node.js
+    sqlite-dev
 
 # Instalar extensiones PHP necesarias para Bagisto
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -32,7 +32,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# ✅ Instalación correcta de Node.js desde Alpine
+# Instalación de Node.js desde Alpine
 RUN apk add --no-cache nodejs npm
 
 # Establecer directorio de trabajo
@@ -41,17 +41,28 @@ WORKDIR /var/www
 # Copiar código del proyecto antes de instalar dependencias
 COPY . .
 
-# Crear enlace simbólico para almacenamiento antes de asignar permisos
-RUN mkdir -p public/storage && ln -sfn /var/www/storage/app/public public/storage \
-    && chown -R www-data:www-data storage bootstrap/cache public/storage \
+# Asegurar que `public/storage` existe
+RUN mkdir -p public/storage && ln -sfn /var/www/storage/app/public public/storage
+
+# Asignar permisos correctos al usuario www-data
+RUN chown -R www-data:www-data storage bootstrap/cache public/storage \
     && chmod -R 777 storage bootstrap/cache public/storage
 
 # Instalar dependencias de PHP y Node.js
 RUN composer install --no-dev --optimize-autoloader && npm install && npm run build
 
-# 🔹 Asegurar que la aplicación detecta que está instalada
+# Generar APP_KEY antes del despliegue
+RUN php artisan key:generate
+
+# Configurar la conexión a la base de datos en el `.env`
 RUN echo "APP_INSTALLED=true" >> .env \
-    && echo "APP_URL=https://bagisto-ecommerce.onrender.com" >> .env
+    && echo "APP_URL=https://bagisto-ecommerce.onrender.com" >> .env \
+    && echo "DB_CONNECTION=mysql" >> .env \
+    && echo "DB_HOST=becm51vqfpialbthq6vw-mysql.services.clever-cloud.com" >> .env \
+    && echo "DB_PORT=3306" >> .env \
+    && echo "DB_DATABASE=becm51vqfpialbthq6vw" >> .env \
+    && echo "DB_USERNAME=uawz1jgviwol8u3v" >> .env \
+    && echo "DB_PASSWORD=a5qBrWELqVwko8CQezSp" >> .env
 
 # Limpiar caché y optimizar Laravel
 RUN php artisan cache:clear \
@@ -66,5 +77,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Exponer puerto de Nginx
 EXPOSE 8080
 
-# Iniciar servicios y ejecutar comandos de Artisan
-CMD ["sh", "-c", "php artisan key:generate && php artisan migrate --force && php artisan cache:clear && php artisan config:clear && php-fpm --nodaemonize & nginx -g 'daemon off;'"]
+# Iniciar servicios con delay para esperar MySQL
+CMD ["sh", "-c", "sleep 10 && php artisan migrate --force && php artisan cache:clear && php artisan config:clear && php-fpm --nodaemonize & nginx -g 'daemon off;'"]
