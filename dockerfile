@@ -72,8 +72,10 @@ RUN echo "APP_INSTALLED=true" >> .env \
     && echo "DB_PASSWORD=a5qBrWELqVwko8CQezSp" >> .env
 
 
-# Crear el enlace simbólico para el almacenamiento (esto crea public/storage -> storage/app/public)
-RUN rm -rf public/storage && php artisan storage:link
+# Crear enlace simbólico manualmente para el almacenamiento
+RUN rm -rf public/storage && ln -s /var/www/storage/app/public /var/www/public/storage
+RUN ls -la /var/www/public
+
 
 # Limpiar caché y optimizar Laravel
 RUN php artisan cache:clear \
