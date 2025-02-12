@@ -71,6 +71,10 @@ RUN echo "APP_INSTALLED=true" >> .env \
     && echo "RESPONSE_CACHE_ENABLED=true" >> .env \
     && echo "DB_PASSWORD=a5qBrWELqVwko8CQezSp" >> .env
 
+
+# Crear el enlace simbólico para el almacenamiento (esto crea public/storage -> storage/app/public)
+RUN rm -rf public/storage && php artisan storage:link
+
 # Limpiar caché y optimizar Laravel
 RUN php artisan cache:clear \
     && php artisan config:clear \
